@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telefontraining – IK-EWIV</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --soft: #eef2ff;
+      --soft-text: #3730a3;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    }
+
+    .card-header {
+      padding: 24px 24px 8px 24px;
+    }
+
+    .card-body {
+      padding: 16px 24px 24px 24px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    h2 {
+      margin: 0 0 14px 0;
+      font-size: 18px;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--soft-text);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .info-box {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #fff;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #334155;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    button.primary {
+      border-color: var(--primary-dark);
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .answer-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      background: #fff;
+      margin-bottom: 14px;
+    }
+
+    .answer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .answer-box {
+      margin-top: 12px;
+      border-radius: 14px;
+      background: #f8fafc;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #334155;
+      white-space: pre-wrap;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 24px;
+    }
+
+    .list {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #334155;
+      padding-left: 18px;
+      margin: 0;
+    }
+
+    .history-wrap {
+      max-height: 360px;
+      overflow-y: auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    .history-item {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .small-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .history-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 1100px) {
+      .layout, .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="layout">
+      <div class="card">
+        <div class="card-header">
+          <div class="title-row">
+            <div>
+              <h1>Telefontraining – Antwort-Simulator</h1>
+              <div class="subtitle">
+                Trainingshilfe für Mitglieder: Frage eingeben, passende Antwortbausteine erhalten und den Gesprächsverlauf schrittweise trainieren.
+              </div>
+            </div>
+            <div class="badge">IK-EWIV konform</div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="row">
+            <div>
+              <label for="nameInput">Name des Gesprächspartners</label>
+              <input id="nameInput" type="text" value="Max" />
+            </div>
+            <div>
+              <label>Gesprächseinstieg</label>
+              <div id="openingBox" class="info-box"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;">
+            <h2>Gesprächsphase</h2>
+            <div class="button-row" id="phaseButtons"></div>
+            <div id="phaseBox" class="info-box" style="margin-top:14px;"></div>
+          </div>
+
+          <div style="margin-top:24px;">
+            <label for="questionInput">Was fragt das Mitglied oder der Gesprächspartner?</label>
+            <textarea id="questionInput" placeholder="Beispiel: Ich verstehe noch nicht, was mir das konkret bringt."></textarea>
+            <div class="button-row">
+              <button class="primary" data-example="Ich verstehe das noch nicht ganz.">Beispiel: Verständnisproblem</button>
+              <button data-example="Was bringt mir das konkret?">Beispiel: Nutzenfrage</button>
+              <button data-example="Was soll ich jetzt konkret machen?">Beispiel: Nächster Schritt</button>
+              <button data-example="Ich brauche noch etwas Zeit.">Beispiel: Brauche Zeit</button>
+              <button data-example="Ich habe das Video noch nicht angesehen.">Beispiel: Video noch offen</button>
+              <button data-example="Warum gibt es die einmalige Sonderumlage von 20 Euro?">Beispiel: 20 Euro</button>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;">
+            <h2>Empfohlene Antwortbausteine</h2>
+            <div id="answersWrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-stack">
+        <div class="card">
+          <div class="card-header">
+            <h2>Gesprächsregeln</h2>
+          </div>
+          <div class="card-body">
+            <ul class="list">
+              <li>keine Versprechen</li>
+              <li>keine steuerliche oder rechtliche Bewertung</li>
+              <li>keine Druck- oder Abschlussrhetorik</li>
+              <li>zuerst einordnen, dann orientieren</li>
+              <li>immer zur individuellen Situation zurückführen</li>
+              <li>lieber eine gute Frage stellen als zu viel erklären</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Gesprächsverlauf</h2>
+          </div>
+          <div class="card-body">
+            <div id="historyWrap" class="history-wrap">
+              <div class="empty-state">Noch keine Antwort übernommen.</div>
+            </div>
+            <div style="margin-top:14px;">
+              <button id="resetBtn" style="width:100%;">Verlauf zurücksetzen</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Fallback-Frage</h2>
+          </div>
+          <div class="card-body">
+            <div class="info-box">
+              Wenn keine Regel passt, führe das Gespräch mit dieser Frage zurück zur Einordnung:
+              <div style="margin-top:12px;font-weight:700;">
+                „Was ist aktuell deine konkrete unternehmerische Situation, die du in diesem Zusammenhang als erstes betrachten möchtest?“
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ruleBlocks = [
+      {
+        id: "not_understood",
+        label: "Verständnisproblem",
+        patterns: ["ich verstehe", "nicht verstanden", "verstehe das nicht", "kompliziert", "zu komplex", "unklar", "nicht ganz verstanden"],
+        answer: "Das ist völlig normal am Anfang. Die Inhalte sind bewusst so aufgebaut, dass man sich Schritt für Schritt hineinfinden kann. Entscheidend ist zunächst, die für dich aktuell relevante Situation in Ruhe einzuordnen.",
+        goal: "Ruhe geben und Komplexität entlasten"
+      },
+      {
+        id: "concrete_benefit",
+        label: "Nutzenfrage",
+        patterns: ["was bringt mir das", "welchen vorteil", "was habe ich davon", "wo ist der nutzen", "wofür ist das gut"],
+        answer: "Das hängt immer von deiner individuellen unternehmerischen Situation ab. Genau deshalb geht es im ersten Schritt nicht um eine pauschale Aussage, sondern um die Einordnung, welcher Bereich für dich aktuell überhaupt relevant ist.",
+        goal: "Keine Pauschalversprechen, sondern individuelle Einordnung"
+      },
+      {
+        id: "next_step",
+        label: "Nächster Schritt",
+        patterns: ["was soll ich jetzt machen", "wie geht es weiter", "was ist der nächste schritt", "wie kann ich starten", "wie starte ich", "was mache ich jetzt"],
+        answer: "Der sinnvollste erste Schritt ist meistens, einen konkreten Bereich auszuwählen und diesen im Zusammenhang zu verstehen. Viele beginnen damit, die eigene aktuelle oder geplante unternehmerische Situation einem ersten Baustein zuzuordnen.",
+        goal: "Ersten kleinen Schritt klar machen"
+      },
+      {
+        id: "booking_pressure",
+        label: "Druck-/Buchungsfrage",
+        patterns: ["muss ich etwas buchen", "muss ich jetzt buchen", "bin ich verpflichtet", "muss ich etwas machen", "bin ich jetzt gebunden"],
+        answer: "Nein. Die weitere Einbindung erfolgt immer auf Grundlage deiner eigenen Entscheidung und deiner individuellen unternehmerischen Situation. Es geht zunächst darum, die Inhalte für dich sauber einzuordnen.",
+        goal: "Druck rausnehmen und Freiwilligkeit betonen"
+      },
+      {
+        id: "security_legal",
+        label: "Rechtliche / steuerliche Einordnung",
+        patterns: ["ist das legal", "rechtlich", "steuerlich", "ist das erlaubt", "anerkannt", "finanzamt", "steuer"],
+        answer: "Wir können dir die Abläufe innerhalb der Gemeinschaft strukturiert darstellen. Die konkrete rechtliche und steuerliche Einordnung erfolgt jedoch immer im Einzelfall durch entsprechend qualifizierte Fachstellen und die zuständigen Behörden.",
+        goal: "Neutral bleiben und keine Bewertung vorwegnehmen"
+      },
+      {
+        id: "existing_business",
+        label: "Bestehendes Geschäft",
+        patterns: ["ich habe schon ein unternehmen", "bestehendes geschäft", "bestehende tätigkeit", "ich bin schon selbstständig"],
+        answer: "Dann wäre ein sinnvoller Ansatz, zuerst genau diese bestehende Tätigkeit im Zusammenhang der vorhandenen Bausteine einzuordnen und zu prüfen, welcher Bereich für deine aktuelle Situation der erste logische Bezugspunkt ist.",
+        goal: "Bestehende Tätigkeit als Ausgangspunkt nutzen"
+      },
+      {
+        id: "new_idea",
+        label: "Neue Idee / Gründung",
+        patterns: ["ich will etwas aufbauen", "neue idee", "gründen", "existenzgründung", "ich starte neu", "vorhaben"],
+        answer: "Dann ist es meist sinnvoll, mit der geplanten Richtung oder dem konkreten Vorhaben zu beginnen und dieses im Zusammenhang der Gemeinschaft Schritt für Schritt einzuordnen. Gerade am Anfang hilft eine klare erste Orientierung besonders.",
+        goal: "Geplante Richtung konkretisieren"
+      },
+      {
+        id: "networking",
+        label: "Kontakte / Netzwerk",
+        patterns: ["kontakte", "netzwerk", "empfehlung", "andere aufmerksam machen", "partner"],
+        answer: "Dann kann ein sinnvoller erster Schritt sein, dir anzusehen, wie du deine vorhandenen Kontakte oder künftigen Empfehlungen innerhalb der Gemeinschaft strukturiert einordnen möchtest. Entscheidend ist auch hier, zunächst einen klaren Ausgangspunkt festzulegen.",
+        goal: "Netzwerk als ersten Bezugspunkt nutzen"
+      },
+      {
+        id: "time_needed",
+        label: "Brauche noch Zeit",
+        patterns: ["ich brauche noch zeit", "muss mir das überlegen", "ich schaue es mir später an", "noch keine zeit", "später"],
+        answer: "Das ist völlig in Ordnung. Wichtig ist nicht, etwas zu überstürzen, sondern die Inhalte in Ruhe für die eigene Situation einzuordnen. Nimm dir die Zeit, die du dafür brauchst.",
+        goal: "Druck vermeiden und Ruhe bestätigen"
+      },
+      {
+        id: "too_much_information",
+        label: "Zu viele Informationen",
+        patterns: ["zu viele informationen", "sehr viel", "ich bin etwas ueberfordert", "ueberfordert", "das ist mir zu viel"],
+        answer: "Dann ist es meist am sinnvollsten, nicht alles auf einmal betrachten zu wollen. Wähle am besten einen Bereich aus, der für deine aktuelle Situation am nächsten liegt, und beginne genau dort.",
+        goal: "Komplexität reduzieren und fokussieren"
+      },
+      {
+        id: "how_to_use_backoffice",
+        label: "Backoffice nutzen",
+        patterns: ["wie nutze ich das backoffice", "wo finde ich was", "backoffice", "wo soll ich anfangen", "wie finde ich mich zurecht"],
+        answer: "Das Backoffice dient vor allem der strukturierten Orientierung. Der einfachste Einstieg ist, mit dem Bereich zu beginnen, der deiner aktuellen oder geplanten unternehmerischen Situation am nächsten kommt, und diesen zunächst im Zusammenhang zu betrachten.",
+        goal: "Backoffice als Orientierungsraum erklären"
+      },
+      {
+        id: "what_is_member_role",
+        label: "Rolle als assoziiertes Mitglied",
+        patterns: ["was bedeutet assoziiertes mitglied", "welche rolle habe ich", "was ist meine rolle", "assoziiertes mitglied", "mitgliedschaft"],
+        answer: "Die Zuordnung als assoziiertes Mitglied bildet zunächst die Grundlage für deine Einbindung innerhalb der Gemeinschaft. Wie du die bereitgestellten Strukturen nutzt und in welcher Form du dich einbringst, erfolgt eigenverantwortlich auf Grundlage deiner individuellen Situation.",
+        goal: "Rolle neutral und systemkonform einordnen"
+      },
+      {
+        id: "why_20_euro",
+        label: "Frage zur einmaligen Sonderumlage",
+        patterns: ["20 euro", "20€", "sonderumlage", "warum 20 euro", "einmalige sonderumlage", "wofuer sind die 20 euro"],
+        answer: "Die einmalige Sonderumlage dient der administrativen und organisatorischen Zuordnung im Zusammenhang mit Registrierung und Verwaltung innerhalb der Gemeinschaft. Sie ist damit Teil der strukturierten Einbindung und nicht als klassische Gegenleistung im üblichen Plattform- oder Shop-Sinn einzuordnen.",
+        goal: "Sonderumlage sachlich einordnen"
+      },
+      {
+        id: "video_not_watched",
+        label: "Video noch nicht angesehen",
+        patterns: ["noch nicht angesehen", "video noch nicht", "noch nicht geschaut", "noch nicht dazu gekommen"],
+        answer: "Kein Problem. Dann ist das aktuell der beste nächste Schritt. Schau dir die Info in Ruhe an und notiere dir dabei gern die Punkte, die du anschließend für deine Situation näher einordnen möchtest.",
+        goal: "Zur ruhigen nächsten Handlung führen"
+      },
+      {
+        id: "video_watched",
+        label: "Video bereits angesehen",
+        patterns: ["habe ich angesehen", "schon gesehen", "video gesehen", "ich habe es angeschaut"],
+        answer: "Sehr gut. Dann wäre jetzt die naheliegende Frage, welcher Teil davon für deine aktuelle oder geplante unternehmerische Situation der erste konkrete Bezugspunkt ist.",
+        goal: "Vom Konsum in die Einordnung führen"
+      },
+      {
+        id: "service_offer",
+        label: "Eigene Leistung / Angebot",
+        patterns: ["ich habe eine leistung", "ich biete etwas an", "mein angebot", "dienstleistung", "leistung anbieten"],
+        answer: "Dann kann es sinnvoll sein, genau dieses Angebot oder diese Leistung als ersten Bereich zu nehmen und zu betrachten, wie es innerhalb der Gemeinschaft sachlich und strukturiert einzuordnen ist.",
+        goal: "Angebot als Startpunkt nutzen"
+      },
+      {
+        id: "uncertain_direction",
+        label: "Noch keine klare Richtung",
+        patterns: ["ich bin noch unsicher", "weiss noch nicht", "keine klare richtung", "noch offen", "ich bin mir nicht sicher"],
+        answer: "Das ist gerade am Anfang nicht ungewöhnlich. Dann ist es oft hilfreich, zunächst nicht die ganze Struktur lösen zu wollen, sondern mit der Frage zu beginnen, welche Situation dich aktuell am meisten beschäftigt: Aufbau, bestehende Tätigkeit, Kontakte oder ein mögliches Angebot.",
+        goal: "Unsicherheit in erste Auswahl überführen"
+      }
+    ];
+
+    const phases = {
+      einstieg: {
+        title: "1. Einstieg",
+        description: "Gespräch ruhig eröffnen und ohne Druck in den ersten Kontakt gehen.",
+        guide: "Frage kurz nach, ob die Inhalte bereits angesehen wurden. Ziel ist nicht zu erklären, sondern das Gespräch sauber zu öffnen.",
+        question: "Konntest du dir die Inhalte bereits anschauen?"
+      },
+      status: {
+        title: "2. Status abholen",
+        description: "Ersten Eindruck und aktuellen Stand aufnehmen.",
+        guide: "Lass den Gesprächspartner sprechen. Frage nach Eindruck, Unklarheiten oder offenen Punkten.",
+        question: "Wie ist dein erster Eindruck dazu?"
+      },
+      einordnung: {
+        title: "3. Einordnung",
+        description: "Gespräch zur konkreten unternehmerischen Situation führen.",
+        guide: "Jetzt nicht alles erklären. Den Fokus auf die aktuelle oder geplante Situation lenken.",
+        question: "Welche deiner aktuellen oder geplanten unternehmerischen Situationen möchtest du als ersten Schritt einordnen?"
+      },
+      naechster_schritt: {
+        title: "4. Nächster Schritt",
+        description: "Einen kleinen, klaren nächsten Schritt sichtbar machen.",
+        guide: "Hilf dabei, einen Bereich im Backoffice oder einen ersten Baustein auszuwählen.",
+        question: "Wäre das für dich ein sinnvoller nächster Schritt, dir genau diesen Bereich in Ruhe anzusehen?"
+      },
+      abschluss: {
+        title: "5. Abschluss",
+        description: "Gespräch ruhig und offen beenden.",
+        guide: "Kein Druck. Zeit geben und Gespräch sauber schließen.",
+        question: "Dann nimm dir gerne die Zeit, das in Ruhe anzuschauen. Wenn Fragen entstehen, kannst du dich jederzeit melden."
+      }
+    };
+
+    const fallbackAnswer = {
+      label: "Offene Einordnungsfrage",
+      answer: "Damit ich dich passend einordnen kann: Was ist aktuell deine konkrete unternehmerische Situation, die du in diesem Zusammenhang als erstes betrachten möchtest?",
+      goal: "Gespräch zurück zur Einordnung führen"
+    };
+
+    let currentPhase = "einstieg";
+    let history = [];
+
+    const nameInput = document.getElementById("nameInput");
+    const openingBox = document.getElementById("openingBox");
+    const phaseButtons = document.getElementById("phaseButtons");
+    const phaseBox = document.getElementById("phaseBox");
+    const questionInput = document.getElementById("questionInput");
+    const answersWrap = document.getElementById("answersWrap");
+    const historyWrap = document.getElementById("historyWrap");
+    const resetBtn = document.getElementById("resetBtn");
+
+    function normalize(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[ä]/g, "ae")
+        .replace(/[ö]/g, "oe")
+        .replace(/[ü]/g, "ue")
+        .replace(/[ß]/g, "ss");
+    }
+
+    function getOpeningText() {
+      const name = nameInput.value || "Name";
+      return `Hallo ${name}, ich melde mich kurz im Zusammenhang mit deiner Registrierung als assoziiertes Mitglied innerhalb der Gemeinschaft von Unternehmern. Ich wollte einfach hören, ob du dir die Inhalte bereits anschauen konntest.`;
+    }
+
+    function detectAnswers(input) {
+      const value = normalize(input);
+      const matches = ruleBlocks.filter(block =>
+        block.patterns.some(pattern => value.includes(normalize(pattern)))
+      );
+      return matches.length > 0 ? matches : [fallbackAnswer];
+    }
+
+    function renderOpening() {
+      openingBox.textContent = getOpeningText();
+    }
+
+    function renderPhaseButtons() {
+      phaseButtons.innerHTML = "";
+      Object.keys(phases).forEach(key => {
+        const btn = document.createElement("button");
+        btn.textContent = phases[key].title.split(". ")[1];
+        btn.className = key === currentPhase ? "primary" : "";
+        btn.addEventListener("click", () => {
+          currentPhase = key;
+          renderPhaseButtons();
+          renderPhaseBox();
+          renderAnswers();
+        });
+        phaseButtons.appendChild(btn);
+      });
+    }
+
+    function renderPhaseBox() {
+      const phase = phases[currentPhase];
+      phaseBox.innerHTML = `
+        <div style="font-weight:700; margin-bottom:8px;">${phase.title}</div>
+        <div style="margin-bottom:8px;">${phase.description}</div>
+        <div style="margin-bottom:8px; color:#475569;">${phase.guide}</div>
+        <div><strong>Leitfrage:</strong> ${phase.question}</div>
+      `;
+    }
+
+    function addHistory(item) {
+      history.unshift(item);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (history.length === 0) {
+        historyWrap.innerHTML = '<div class="empty-state">Noch keine Antwort übernommen.</div>';
+        return;
+      }
+
+      historyWrap.innerHTML = history.map(item => `
+        <div class="history-item">
+          <div class="history-head">
+            <div class="small-badge">${item.label}</div>
+            <div class="muted">${item.time}</div>
+          </div>
+          <div class="muted" style="margin-top:10px;">Phase</div>
+          <div style="font-size:14px; line-height:1.6;">${item.phase}</div>
+          <div class="muted" style="margin-top:10px;">Frage</div>
+          <div style="font-size:14px; line-height:1.6;">${item.question || "–"}</div>
+          <div class="muted" style="margin-top:10px;">Antwort</div>
+          <div style="font-size:14px; line-height:1.6;">${item.answer}</div>
+          <div class="muted" style="margin-top:10px;">Ziel</div>
+          <div style="font-size:14px; line-height:1.6;">${item.goal}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderAnswers() {
+      const blocks = detectAnswers(questionInput.value);
+      answersWrap.innerHTML = "";
+
+      blocks.forEach(block => {
+        const wrap = document.createElement("div");
+        wrap.className = "answer-card";
+
+        wrap.innerHTML = `
+          <div class="answer-top">
+            <div>
+              <div style="font-weight:700;">${block.label}</div>
+              <div class="muted">Ziel: ${block.goal}</div>
+            </div>
+          </div>
+          <div class="answer-box">${block.answer}</div>
+        `;
+
+        const btn = document.createElement("button");
+        btn.className = "primary";
+        btn.textContent = "Antwort übernehmen";
+        btn.addEventListener("click", () => {
+          const now = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+          addHistory({
+            time: now,
+            phase: phases[currentPhase].title,
+            question: questionInput.value,
+            label: block.label,
+            answer: block.answer,
+            goal: block.goal
+          });
+        });
+
+        wrap.querySelector(".answer-top").appendChild(btn);
+        answersWrap.appendChild(wrap);
+      });
+    }
+
+    document.querySelectorAll("[data-example]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        questionInput.value = btn.getAttribute("data-example");
+        renderAnswers();
+      });
+    });
+
+    nameInput.addEventListener("input", renderOpening);
+    questionInput.addEventListener("input", renderAnswers);
+
+    resetBtn.addEventListener("click", () => {
+      history = [];
+      currentPhase = "einstieg";
+      questionInput.value = "";
+      renderPhaseButtons();
+      renderPhaseBox();
+      renderAnswers();
+      renderHistory();
+    });
+
+    renderOpening();
+    renderPhaseButtons();
+    renderPhaseBox();
+    renderAnswers();
+    renderHistory();
+  </script>
+</body>
+</html>
