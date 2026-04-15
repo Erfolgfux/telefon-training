@@ -10,37 +10,39 @@
   --primary-soft:#e8f5f7;
   --bg:#f5f7fa;
   --card:#ffffff;
-  --border:#e2e8f0;
+  --border:#d9e2ec;
   --text:#0f172a;
   --muted:#64748b;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial, sans-serif;background:var(--bg);color:var(--text)}
-.container{display:grid;grid-template-columns:1fr 1fr 1fr;min-height:100vh}
-.panel{padding:20px;border-right:1px solid var(--border);overflow:auto;background:#fff}
+.container{display:grid;grid-template-columns:1fr 1fr 1fr;height:100vh}
+.panel{padding:20px;border-right:1px solid var(--border);overflow:auto;background:#fff;height:100vh}
 .panel:last-child{border-right:none}
 .panel.active{background:var(--primary-soft)}
 h2{margin:0 0 8px 0}
 .sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
 label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px 0}
 textarea,input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;font:inherit;background:#fff}
-textarea{min-height:100px;resize:vertical}
+textarea{min-height:92px;resize:vertical}
 button{padding:10px 14px;border-radius:10px;border:none;background:var(--primary);color:#fff;cursor:pointer;margin-top:10px;font-weight:700}
 button.secondary{background:#e2e8f0;color:#0f172a}
 button.ghost{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
 .message{background:#fff;border:1px solid var(--border);padding:12px;border-radius:12px;margin-bottom:10px;line-height:1.55}
 .message.call{border-left:4px solid var(--primary)}
 .message.lead{border-left:4px solid #94a3b8}
-.badge{display:inline-block;font-size:12px;color:var(--muted);margin-bottom:10px}
 .answerBox{background:#fff;border:1px solid var(--border);padding:12px;border-radius:12px;line-height:1.6;min-height:84px;white-space:pre-wrap}
 .block{background:#fff;border:1px solid var(--border);padding:12px;border-radius:12px;margin-top:12px}
 .small{font-size:12px;color:var(--muted)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.twoCols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
 .listButtons{display:grid;gap:8px;margin-top:10px}
-.optionBtn{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer;font-weight:600}
+.optionBtn{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer;font-weight:600;line-height:1.45}
 .optionBtn:hover{border-color:var(--primary);background:#f8fcfd}
 .sectionTitle{margin-top:14px;font-size:14px;font-weight:700}
-@media (max-width:1100px){.container{grid-template-columns:1fr}}
+.chatScroll{max-height:calc(100vh - 160px);overflow:auto;padding-right:4px}
+.stepBadge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eff6ff;color:#0f172a;font-size:12px;font-weight:700;margin-bottom:8px}
+@media (max-width:1100px){.container{grid-template-columns:1fr;height:auto}.panel{height:auto}.chatScroll{max-height:none}}
 </style>
 </head>
 <body>
@@ -48,55 +50,64 @@ button.ghost{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
 
   <div class="panel active" id="callerPanel">
     <h2>Aktives Mitglied</h2>
-    <div class="sub">Links startet der Anruf. Du beginnst mit einem kurzen Einstieg, stellst dann eine Frage und führst das Gespräch.</div>
+    <div class="sub">Links führst du den Anruf. Nach jeder Antwort des neuen Mitglieds werden hier passend 5 neue Fragen und 5 neue Reaktionen angeboten.</div>
 
-    <label for="scenarioSelect">Situation</label>
-    <select id="scenarioSelect" onchange="applyScenario()"></select>
+    <label for="scenarioSelect">Ausgangssituation</label>
+    <select id="scenarioSelect" onchange="startScenario()"></select>
 
     <label for="smalltalkInput">Kurzer Einstieg / Smalltalk</label>
-    <textarea id="smalltalkInput" placeholder="Zum Beispiel: Hallo Frau Meyer, ich wollte mich kurz melden und hören, ob Sie gut in den Tag gestartet sind."></textarea>
+    <textarea id="smalltalkInput"></textarea>
 
-    <label for="callerQuestionInput">Deine Frage</label>
-    <textarea id="callerQuestionInput" placeholder="Zum Beispiel: Konntest du dir die Unternehmer-Info bereits in Ruhe ansehen?"></textarea>
+    <label for="callerQuestionInput">Deine aktuelle Frage oder Reaktion</label>
+    <textarea id="callerQuestionInput"></textarea>
 
     <div class="row">
       <button onclick="sendCallerTurn()">In Verlauf übernehmen</button>
-      <button class="ghost" onclick="useSuggestedQuestion(0)">Vorgegebene Frage nutzen</button>
+      <button class="ghost" onclick="useLeftQuestion(0)">Vorgegebene Frage nutzen</button>
     </div>
 
-    <div class="block">
-      <div class="small">5 passende Fragen für das aktive Mitglied</div>
-      <div id="callerQuestionOptions" class="listButtons"></div>
-    </div>
-
-    <div class="block">
-      <div class="small">5 mögliche Reaktionen auf die aktuelle Situation</div>
-      <div id="callerAnswerOptions" class="listButtons"></div>
+    <div class="twoCols">
+      <div class="block">
+        <div class="small">5 passende Fragen für das aktive Mitglied</div>
+        <div id="leftQuestions" class="listButtons"></div>
+      </div>
+      <div class="block">
+        <div class="small">5 passende Reaktionen des aktiven Mitglieds</div>
+        <div id="leftResponses" class="listButtons"></div>
+      </div>
     </div>
   </div>
 
   <div class="panel" id="chatPanel">
     <h2>Gesprächsverlauf</h2>
-    <div class="sub">Hier wird das Gespräch Schritt für Schritt aufgebaut. Antworten und Fragen des neuen Mitglieds bleiben sichtbar.</div>
-    <div id="chat"></div>
+    <div class="sub">Der Verlauf wächst nach unten und kann gescrollt werden. Die Seiten links und rechts bleiben dabei statisch.</div>
+    <div id="chatScroll" class="chatScroll">
+      <div id="chat"></div>
+    </div>
     <button class="secondary" onclick="resetChat()">Verlauf zurücksetzen</button>
   </div>
 
   <div class="panel" id="leadPanel">
     <h2>Neues Mitglied</h2>
-    <div class="sub">Rechts gibst du ein, was das neue Mitglied antwortet oder zurückfragt. Zusätzlich kannst du aus passenden vorgegebenen Antworten auswählen.</div>
+    <div class="sub">Rechts gibst du ein, was das neue Mitglied antwortet oder zurückfragt. Danach werden passend zum Gesprächsstand 5 neue Antworten und 5 neue Rückfragen angeboten.</div>
 
-    <label for="leadInput">Antwort / Frage des neuen Mitglieds</label>
-    <textarea id="leadInput" placeholder="Zum Beispiel: Ich habe das Video noch nicht angesehen und bin mir noch nicht sicher, was jetzt der nächste Schritt ist."></textarea>
+    <label for="leadInput">Aktuelle Antwort / Frage des neuen Mitglieds</label>
+    <textarea id="leadInput"></textarea>
 
     <div class="row">
       <button onclick="processLeadInput()">Auswerten</button>
-      <button class="ghost" onclick="useLeadAnswer(0)">Vorgegebene Antwort nutzen</button>
+      <button class="ghost" onclick="useRightAnswer(0)">Vorgegebene Antwort nutzen</button>
     </div>
 
-    <div class="block">
-      <div class="small">5 mögliche Antworten / Rückfragen des neuen Mitglieds</div>
-      <div id="leadAnswerOptions" class="listButtons"></div>
+    <div class="twoCols">
+      <div class="block">
+        <div class="small">5 mögliche Antworten des neuen Mitglieds</div>
+        <div id="rightAnswers" class="listButtons"></div>
+      </div>
+      <div class="block">
+        <div class="small">5 mögliche Rückfragen des neuen Mitglieds</div>
+        <div id="rightQuestions" class="listButtons"></div>
+      </div>
     </div>
 
     <div class="block">
@@ -107,199 +118,240 @@ button.ghost{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
     <div class="block">
       <div class="small">Empfohlene nächste Reaktion des aktiven Mitglieds</div>
       <div id="response" class="answerBox" style="margin-top:8px"></div>
-      <button onclick="useResponse()">Antwort in linken Bereich übernehmen</button>
+      <button onclick="useRecommendedResponse()">Empfohlene Reaktion links übernehmen</button>
     </div>
   </div>
 
 </div>
 
 <script>
-const scenarios = {
-  einstieg_video_offen: {
-    name: 'Video noch nicht angesehen',
-    smalltalk: 'Hallo, ich wollte mich kurz melden und hören, ob du gut in den Tag gestartet bist.',
-    callerQuestions: [
+const openings = {
+  video_offen: 'Hallo, ich wollte mich kurz melden und hören, ob du gut in den Tag gestartet bist.',
+  nutzen_unsicher: 'Hallo, ich wollte mich kurz melden und hören, wie dein erster Eindruck bisher ist.',
+  naechster_schritt: 'Hallo, ich wollte kurz nachfragen, ob du dir bereits einen ersten Überblick verschaffen konntest.',
+  sonderumlage: 'Hallo, ich wollte mich kurz melden und hören, ob bei dir noch Fragen offengeblieben sind.',
+  backoffice: 'Hallo, ich wollte kurz hören, wie du bisher mit dem Backoffice zurechtkommst.'
+};
+
+const flowLibrary = {
+  video_offen: {
+    leftQuestions: [
       'Konntest du dir die bereitgestellten Inhalte bereits in Ruhe ansehen?',
       'Hattest du schon Gelegenheit, in die Unternehmer-Info hineinzuschauen?',
       'Bist du schon dazu gekommen, dir die Existenzgründer-Info anzusehen?',
       'Wie weit bist du bisher mit den bereitgestellten Informationen gekommen?',
       'Gab es schon einen Moment, in dem du dir die Inhalte in Ruhe anschauen konntest?'
     ],
-    leadAnswers: [
+    leftResponses: [
+      'Kein Problem. Dann ist das aktuell der beste nächste Schritt. Schau dir die Info in Ruhe an.',
+      'Das ist völlig in Ordnung. Wichtig ist nur, dass du dir die Inhalte in einem ruhigen Moment ansiehst.',
+      'Dann würde ich dir empfehlen, zunächst genau dort anzusetzen.',
+      'Nimm dir ruhig die Zeit dafür. Danach wird meist deutlich klarer, was der erste sinnvolle Schritt ist.',
+      'Dann liegt der Fokus jetzt noch nicht auf dem nächsten Baustein, sondern zuerst auf einer ruhigen ersten Einordnung über die Info.'
+    ],
+    rightAnswers: [
       'Nein, ich bin noch nicht dazu gekommen.',
       'Ich habe das Video noch nicht angesehen.',
       'Ich wollte es mir noch anschauen, hatte aber noch keine Zeit.',
       'Bisher nur kurz, aber noch nicht richtig.',
       'Noch nicht, ich war zeitlich ziemlich eingebunden.'
     ],
-    callerResponses: [
-      'Kein Problem. Dann ist das aktuell der beste nächste Schritt. Schau dir die Info in Ruhe an und notiere dir gern die Punkte, die du danach für dich einordnen möchtest.',
-      'Das ist völlig in Ordnung. Wichtig ist nur, dass du dir die Inhalte in einem ruhigen Moment ansiehst und nicht zwischen Tür und Angel.',
-      'Dann würde ich dir empfehlen, zunächst genau dort anzusetzen und danach zu schauen, welcher Bereich für dich am relevantesten ist.',
-      'Nimm dir ruhig die Zeit dafür. Danach lässt sich meist deutlich klarer erkennen, was für deine Situation der erste sinnvolle Schritt ist.',
-      'Dann liegt der Fokus jetzt noch nicht auf dem nächsten Baustein, sondern zuerst auf einer ruhigen ersten Einordnung über die Info.'
-    ]
+    rightQuestions: [
+      'Was wäre denn danach mein nächster Schritt?',
+      'Muss ich mir beide Infos ansehen?',
+      'Wo finde ich die Info nochmal?',
+      'Soll ich zuerst mit dem Video oder dem Backoffice anfangen?',
+      'Was ist wichtig, wenn ich es angesehen habe?'
+    ],
+    detected: 'Video noch nicht gesehen',
+    recommended: 'Kein Problem. Dann ist das aktuell der beste nächste Schritt. Schau dir die Info in Ruhe an. Wenn du magst, kannst du dir dabei direkt notieren, welche Frage oder welche Situation du danach als Erstes einordnen möchtest.'
   },
-  unsicher_nutzen: {
-    name: 'Unsicherheit zum Nutzen',
-    smalltalk: 'Hallo, ich wollte mich kurz melden und hören, wie dein erster Eindruck bisher ist.',
-    callerQuestions: [
+  nutzen_unsicher: {
+    leftQuestions: [
       'Gab es etwas, das für dich besonders interessant oder noch unklar war?',
       'Wie ist dein erster Eindruck zu den bisherigen Inhalten?',
       'An welchem Punkt bist du für dich noch nicht ganz klar?',
       'Was ist aktuell die wichtigste Frage, die du dir dabei stellst?',
       'Wo merkst du gerade noch die größte Unsicherheit?'
     ],
-    leadAnswers: [
+    leftResponses: [
+      'Das hängt immer von deiner individuellen Situation ab.',
+      'Das ist ein normaler Punkt am Anfang.',
+      'Lass uns das nicht allgemein betrachten, sondern an deiner konkreten Situation festmachen.',
+      'Die Struktur soll dir gerade dabei helfen, einen konkreten Ausgangspunkt zu finden.',
+      'Die wichtigste Frage ist jetzt nicht, ob alles passt, sondern welcher Teil für dich zuerst relevant sein könnte.'
+    ],
+    rightAnswers: [
       'Ich verstehe noch nicht ganz, was mir das konkret bringt.',
       'Ich bin mir noch nicht sicher, ob das für mich überhaupt passt.',
       'Mir ist der konkrete Nutzen noch nicht klar.',
       'Ich sehe die Struktur, aber weiß noch nicht, was ich damit anfangen soll.',
       'Ich bin noch unsicher, ob das für meine Situation sinnvoll ist.'
     ],
-    callerResponses: [
-      'Das hängt immer von deiner individuellen Situation ab. Genau deshalb geht es jetzt nicht um eine pauschale Antwort, sondern um die Einordnung deiner konkreten Situation.',
-      'Das ist ein normaler Punkt am Anfang. Der Nutzen wird meist erst dann klar, wenn man einen ersten Bereich auf die eigene Situation bezieht.',
-      'Lass uns das nicht allgemein betrachten: Welche deiner aktuellen oder geplanten Situationen wäre denn der naheliegendste Bezugspunkt?',
-      'Die Struktur soll dir gerade dabei helfen, nicht abstrakt zu bleiben, sondern einen konkreten Ausgangspunkt für dich zu finden.',
-      'Die wichtigste Frage ist jetzt nicht, ob alles passt, sondern welcher Teil für dich zuerst relevant sein könnte.'
-    ]
+    rightQuestions: [
+      'Wie finde ich heraus, ob das für mich passt?',
+      'Woran erkenne ich den richtigen Einstieg?',
+      'Welche Frage sollte ich mir zuerst stellen?',
+      'Geht es eher um meine aktuelle oder geplante Situation?',
+      'Muss ich dafür schon genau wissen, was ich machen will?'
+    ],
+    detected: 'Nutzenfrage / Unsicherheit',
+    recommended: 'Das hängt immer von deiner individuellen Situation ab. Genau deshalb ist jetzt der wichtigste Schritt, zuerst den Bereich einzuordnen, der für dich aktuell überhaupt relevant ist. Welche Situation möchtest du als Erstes betrachten?'
   },
   naechster_schritt: {
-    name: 'Frage nach dem nächsten Schritt',
-    smalltalk: 'Hallo, ich wollte kurz nachfragen, ob du dir bereits einen ersten Überblick verschaffen konntest.',
-    callerQuestions: [
+    leftQuestions: [
       'Was ist für dich aktuell die naheliegendste nächste Frage?',
       'Wo würdest du sagen, brauchst du gerade am meisten Orientierung?',
       'Was ist für dich im Moment der wichtigste nächste Punkt?',
       'An welchem Bereich möchtest du für dich als Erstes ansetzen?',
       'Was wäre aus deiner Sicht gerade der sinnvollste erste Schritt?'
     ],
-    leadAnswers: [
+    leftResponses: [
+      'Der sinnvollste erste Schritt ist meistens, einen konkreten Bereich auszuwählen.',
+      'Viele beginnen damit, die eigene aktuelle oder geplante Situation einem ersten Baustein zuzuordnen.',
+      'Der nächste Schritt ist meist nicht alles auf einmal, sondern ein klarer erster Bezugspunkt.',
+      'Schau am besten zuerst, ob es bei dir eher um Aufbau, bestehende Tätigkeit, Kontakte oder ein konkretes Angebot geht.',
+      'Wenn du einen ersten Bereich festgelegt hast, wird die weitere Einordnung meist deutlich einfacher.'
+    ],
+    rightAnswers: [
       'Was soll ich jetzt konkret machen?',
       'Wie geht es jetzt für mich weiter?',
       'Was wäre jetzt der nächste Schritt?',
       'Ich weiß gerade nicht, wo ich anfangen soll.',
       'Wie kann ich jetzt konkret starten?'
     ],
-    callerResponses: [
-      'Der sinnvollste erste Schritt ist meistens, einen konkreten Bereich auszuwählen und diesen im Zusammenhang zu verstehen.',
-      'Viele beginnen damit, die eigene aktuelle oder geplante Situation einem ersten Baustein zuzuordnen.',
-      'Der nächste Schritt ist meist nicht alles auf einmal, sondern ein klarer erster Bezugspunkt.',
-      'Schau am besten zuerst, ob es bei dir eher um Aufbau, bestehende Tätigkeit, Kontakte oder ein konkretes Angebot geht.',
-      'Wenn du einen ersten Bereich festgelegt hast, wird die weitere Einordnung meist deutlich einfacher.'
-    ]
+    rightQuestions: [
+      'Soll ich zuerst ins Backoffice oder in die Videos gehen?',
+      'Was wäre ein guter erster Bereich für mich?',
+      'Muss ich mich direkt festlegen?',
+      'Kann ich mir erst einen Überblick verschaffen?',
+      'Wie finde ich meinen ersten Bezugspunkt?'
+    ],
+    detected: 'Nächster Schritt',
+    recommended: 'Der sinnvollste erste Schritt ist meistens, einen konkreten Bereich auszuwählen und diesen im Zusammenhang zu verstehen. Was passt bei dir gerade am ehesten: bestehende Tätigkeit, neue Idee, Kontakte oder ein konkretes Angebot?'
   },
   sonderumlage: {
-    name: 'Frage zur Sonderumlage',
-    smalltalk: 'Hallo, ich wollte mich kurz melden und hören, ob bei dir noch Fragen offengeblieben sind.',
-    callerQuestions: [
+    leftQuestions: [
       'Gab es einen Punkt, zu dem du noch Rückfragen hast?',
       'Ist dir bisher an irgendeiner Stelle noch etwas unklar geblieben?',
       'Welche Frage steht für dich gerade am meisten im Vordergrund?',
       'Gibt es etwas, das du gern noch sauber eingeordnet hättest?',
       'Wo brauchst du im Moment noch etwas Klarheit?'
     ],
-    leadAnswers: [
+    leftResponses: [
+      'Die einmalige Sonderumlage dient der administrativen und organisatorischen Zuordnung innerhalb der Gemeinschaft.',
+      'Sie ist Teil der strukturierten Einbindung und nicht als klassische Gegenleistung im üblichen Shop-Sinn einzuordnen.',
+      'Wichtig ist dabei, die Sonderumlage im Zusammenhang mit Registrierung und Zuordnung zu sehen.',
+      'Unabhängig davon ist für dich jetzt vor allem wichtig, deine aktuelle Situation sauber einzuordnen.',
+      'Die Sonderumlage beantwortet den organisatorischen Teil. Die inhaltliche Einordnung beginnt dann mit deinem konkreten Bezugspunkt.'
+    ],
+    rightAnswers: [
       'Warum gibt es die einmalige Sonderumlage von 20 Euro?',
       'Wofür sind die 20 Euro genau gedacht?',
       'Ist die Sonderumlage verpflichtend?',
       'Ich bin bei den 20 Euro noch nicht ganz sicher.',
       'Wie ist diese Sonderumlage einzuordnen?'
     ],
-    callerResponses: [
-      'Die einmalige Sonderumlage dient der administrativen und organisatorischen Zuordnung innerhalb der Gemeinschaft.',
-      'Sie ist Teil der strukturierten Einbindung und nicht als klassische Gegenleistung im üblichen Shop-Sinn einzuordnen.',
-      'Wichtig ist dabei, die Sonderumlage im Zusammenhang mit Registrierung und Zuordnung zu sehen.',
-      'Unabhängig davon ist für dich jetzt vor allem wichtig, deine aktuelle Situation sauber einzuordnen.',
-      'Die Sonderumlage beantwortet den organisatorischen Teil. Die inhaltliche Einordnung beginnt dann mit deinem konkreten Bezugspunkt.'
-    ]
+    rightQuestions: [
+      'Hat das mit dem Einstieg in die Gemeinschaft zu tun?',
+      'Ist das eher organisatorisch oder inhaltlich gemeint?',
+      'Was ist davon getrennt zu betrachten?',
+      'Was passiert nach dieser Zuordnung?',
+      'Welche Rolle spielt das für meine weitere Einordnung?'
+    ],
+    detected: 'Sonderumlage 20 Euro',
+    recommended: 'Die einmalige Sonderumlage dient der administrativen und organisatorischen Zuordnung innerhalb der Gemeinschaft. Unabhängig davon ist jetzt vor allem wichtig, deine aktuelle Situation sauber einzuordnen. Wo möchtest du da zuerst ansetzen?'
   },
   backoffice: {
-    name: 'Orientierung im Backoffice',
-    smalltalk: 'Hallo, ich wollte kurz hören, wie du bisher mit dem Backoffice zurechtkommst.',
-    callerQuestions: [
+    leftQuestions: [
       'Findest du dich im Backoffice bisher gut zurecht?',
       'Gab es dort einen Bereich, der für dich schon greifbar war?',
       'Wo würdest du im Backoffice im Moment am ehesten ansetzen?',
       'Welcher Bereich wirkt für dich dort aktuell am relevantesten?',
       'An welcher Stelle brauchst du im Backoffice noch Orientierung?'
     ],
-    leadAnswers: [
+    leftResponses: [
+      'Das Backoffice dient vor allem der strukturierten Orientierung.',
+      'Der einfachste Einstieg ist, mit dem Bereich zu beginnen, der deiner aktuellen oder geplanten Situation am nächsten kommt.',
+      'Es geht dort nicht darum, alles sofort zu verstehen, sondern einen ersten Bezugspunkt zu finden.',
+      'Wenn du deinen ersten thematischen Anknüpfungspunkt festgelegt hast, wird das Backoffice automatisch klarer.',
+      'Die wichtigste Frage ist dabei: Welcher Bereich passt bei dir gerade am ehesten zur aktuellen Situation?'
+    ],
+    rightAnswers: [
       'Ich weiß im Backoffice noch nicht, wo ich anfangen soll.',
       'Mir ist noch nicht klar, welcher Bereich für mich der richtige ist.',
       'Ich finde mich dort noch nicht richtig zurecht.',
       'Wo finde ich denn den passenden Einstieg?',
       'Das Backoffice ist für mich aktuell noch etwas unübersichtlich.'
     ],
-    callerResponses: [
-      'Das Backoffice dient vor allem der strukturierten Orientierung.',
-      'Der einfachste Einstieg ist, mit dem Bereich zu beginnen, der deiner aktuellen oder geplanten Situation am nächsten kommt.',
-      'Es geht dort nicht darum, alles sofort zu verstehen, sondern einen ersten Bezugspunkt zu finden.',
-      'Wenn du deinen ersten thematischen Anknüpfungspunkt festgelegt hast, wird das Backoffice automatisch klarer.',
-      'Die wichtigste Frage ist dabei: Welcher Bereich passt bei dir gerade am ehesten zur aktuellen Situation?'
-    ]
+    rightQuestions: [
+      'Welcher Bereich wäre für den Anfang am sinnvollsten?',
+      'Muss ich alles anschauen oder reicht erstmal ein Teil?',
+      'Woran orientiere ich mich zuerst?',
+      'Soll ich nach meiner aktuellen oder geplanten Situation gehen?',
+      'Wie finde ich den passenden ersten Bezugspunkt?'
+    ],
+    detected: 'Backoffice / Orientierung',
+    recommended: 'Das Backoffice dient vor allem der strukturierten Orientierung. Der einfachste Einstieg ist, mit dem Bereich zu beginnen, der deiner aktuellen oder geplanten Situation am nächsten kommt. Welcher Bereich wäre das bei dir?'
   }
 };
 
-const rules=[
-  { label:'Verständnisproblem', keys:['verstehe','nicht verstanden','kompliziert','zu komplex','unklar'], answer:'Das ist völlig normal am Anfang. Die Inhalte sind bewusst so aufgebaut, dass man sich Schritt für Schritt hineinfinden kann. Was davon ist für deine aktuelle Situation gerade der wichtigste Punkt?' },
-  { label:'Nutzenfrage', keys:['was bringt','nutzen','vorteil','was habe ich davon'], answer:'Das hängt immer von deiner individuellen Situation ab. Genau deshalb ist jetzt der wichtigste Schritt, zuerst den Bereich einzuordnen, der für dich aktuell überhaupt relevant ist. Welche Situation möchtest du als Erstes betrachten?' },
-  { label:'Nächster Schritt', keys:['wie weiter','nächste schritt','was soll ich jetzt machen','wie starte ich'], answer:'Der sinnvollste erste Schritt ist meistens, einen konkreten Bereich auszuwählen und diesen im Zusammenhang zu verstehen. Was passt bei dir gerade am ehesten: bestehende Tätigkeit, neue Idee, Kontakte oder ein konkretes Angebot?' },
-  { label:'Brauche noch Zeit', keys:['keine zeit','brauche noch zeit','später','überlegen'], answer:'Das ist völlig in Ordnung. Wichtig ist nicht, etwas zu überstürzen. Nimm dir die Zeit, die du brauchst. Darf ich dir trotzdem eine kurze Frage mitgeben: Welcher Bereich wäre für dich später der erste Anknüpfungspunkt?' },
-  { label:'Sonderumlage 20 Euro', keys:['20','sonderumlage'], answer:'Die einmalige Sonderumlage dient der administrativen und organisatorischen Zuordnung innerhalb der Gemeinschaft. Unabhängig davon ist jetzt vor allem wichtig, deine aktuelle Situation sauber einzuordnen. Wo möchtest du da zuerst ansetzen?' },
-  { label:'Video noch nicht gesehen', keys:['noch nicht angesehen','noch nicht geschaut','video noch nicht','noch nicht dazu gekommen'], answer:'Kein Problem. Dann ist das aktuell der beste nächste Schritt. Schau dir die Info in Ruhe an. Wenn du magst, kannst du dir dabei direkt notieren, welche Frage oder welche Situation du danach als Erstes einordnen möchtest.' },
-  { label:'Video bereits gesehen', keys:['schon gesehen','habe ich angesehen','angeschaut','video gesehen'], answer:'Sehr gut. Dann wäre jetzt die naheliegende Frage: Welcher Teil davon hat bei dir den stärksten Bezug zu deiner aktuellen oder geplanten unternehmerischen Situation?' },
-  { label:'Unsicherheit', keys:['unsicher','weiß noch nicht','weiss noch nicht','keine klare richtung','nicht sicher'], answer:'Das ist gerade am Anfang nicht ungewöhnlich. Dann ist es oft hilfreich, zunächst nicht alles lösen zu wollen, sondern nur den ersten Bezugspunkt festzulegen. Welche dieser Richtungen trifft bei dir am ehesten zu: Aufbau, bestehende Tätigkeit, Kontakte oder ein Angebot?' },
-  { label:'Backoffice', keys:['backoffice','wo finde ich','wo soll ich anfangen'], answer:'Das Backoffice dient vor allem der strukturierten Orientierung. Der einfachste Einstieg ist, mit dem Bereich zu beginnen, der deiner aktuellen oder geplanten Situation am nächsten kommt. Welcher Bereich wäre das bei dir?' }
+const transitionMap = [
+  { keys:['noch nicht angesehen','noch nicht geschaut','noch nicht dazu gekommen','keine zeit','eingebunden'], scenario:'video_offen' },
+  { keys:['was bringt','nutzen','unsicher','passt','nicht klar'], scenario:'nutzen_unsicher' },
+  { keys:['wie geht es weiter','nächste schritt','was soll ich jetzt machen','starten','wo anfangen'], scenario:'naechster_schritt' },
+  { keys:['20','sonderumlage'], scenario:'sonderumlage' },
+  { keys:['backoffice','wo finde ich','zurecht','unübersichtlich','unuebersichtlich'], scenario:'backoffice' }
 ];
 
-let lastResponse = '';
-let lastDetected = '';
+let currentScenarioKey = 'video_offen';
+let lastRecommendedResponse = '';
 
 function setActive(id){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-function getSelectedScenario(){
-  const key = document.getElementById('scenarioSelect').value;
-  return scenarios[key];
-}
-
 function renderScenarioSelect(){
   const select = document.getElementById('scenarioSelect');
-  select.innerHTML = Object.entries(scenarios).map(([key,val]) => `<option value="${key}">${val.name}</option>`).join('');
+  select.innerHTML = Object.entries(flowLibrary).map(([key, val]) => `<option value="${key}">${escapeHtml(val.detected)}</option>`).join('');
 }
 
-function renderOptionButtons(containerId, items, clickFnName){
-  const el = document.getElementById(containerId);
-  el.innerHTML = items.map((item, idx) => `<button class="optionBtn" onclick="${clickFnName}(${idx})">${idx+1}. ${escapeHtml(item)}</button>`).join('');
-}
-
-function applyScenario(){
-  const scenario = getSelectedScenario();
-  document.getElementById('smalltalkInput').value = scenario.smalltalk;
-  document.getElementById('callerQuestionInput').value = scenario.callerQuestions[0];
-  renderOptionButtons('callerQuestionOptions', scenario.callerQuestions, 'useSuggestedQuestion');
-  renderOptionButtons('leadAnswerOptions', scenario.leadAnswers, 'useLeadAnswer');
-  renderOptionButtons('callerAnswerOptions', scenario.callerResponses, 'useCallerResponseOption');
-}
-
-function useSuggestedQuestion(index){
-  const scenario = getSelectedScenario();
-  document.getElementById('callerQuestionInput').value = scenario.callerQuestions[index] || scenario.callerQuestions[0];
-}
-
-function useLeadAnswer(index){
-  const scenario = getSelectedScenario();
-  document.getElementById('leadInput').value = scenario.leadAnswers[index] || scenario.leadAnswers[0];
-}
-
-function useCallerResponseOption(index){
-  const scenario = getSelectedScenario();
-  document.getElementById('callerQuestionInput').value = scenario.callerResponses[index] || scenario.callerResponses[0];
+function startScenario(){
+  currentScenarioKey = document.getElementById('scenarioSelect').value;
+  hydratePanels(currentScenarioKey);
+  document.getElementById('detectedLabel').innerText = 'Noch keine Auswertung.';
+  document.getElementById('response').innerText = '';
+  lastRecommendedResponse = '';
   setActive('callerPanel');
+}
+
+function hydratePanels(key){
+  const data = flowLibrary[key];
+  document.getElementById('smalltalkInput').value = openings[key] || '';
+  document.getElementById('callerQuestionInput').value = data.leftQuestions[0] || '';
+  document.getElementById('leadInput').value = data.rightAnswers[0] || '';
+  renderOptions('leftQuestions', data.leftQuestions, 'useLeftQuestion');
+  renderOptions('leftResponses', data.leftResponses, 'useLeftResponse');
+  renderOptions('rightAnswers', data.rightAnswers, 'useRightAnswer');
+  renderOptions('rightQuestions', data.rightQuestions, 'useRightQuestion');
+}
+
+function renderOptions(containerId, items, fnName){
+  document.getElementById(containerId).innerHTML = items.map((item, idx) => `<button class="optionBtn" onclick="${fnName}(${idx})">${idx+1}. ${escapeHtml(item)}</button>`).join('');
+}
+
+function useLeftQuestion(index){
+  document.getElementById('callerQuestionInput').value = flowLibrary[currentScenarioKey].leftQuestions[index] || '';
+}
+function useLeftResponse(index){
+  document.getElementById('callerQuestionInput').value = flowLibrary[currentScenarioKey].leftResponses[index] || '';
+}
+function useRightAnswer(index){
+  document.getElementById('leadInput').value = flowLibrary[currentScenarioKey].rightAnswers[index] || '';
+}
+function useRightQuestion(index){
+  document.getElementById('leadInput').value = flowLibrary[currentScenarioKey].rightQuestions[index] || '';
 }
 
 function sendCallerTurn(){
@@ -307,11 +359,11 @@ function sendCallerTurn(){
   const question = document.getElementById('callerQuestionInput').value.trim();
   if(!smalltalk && !question) return;
   const chat = document.getElementById('chat');
-  let html = '<div class="message call"><b>Aktives Mitglied</b><br>';
-  if(smalltalk) html += '<div><b>Einstieg:</b> ' + escapeHtml(smalltalk) + '</div>';
-  if(question) html += '<div style="margin-top:6px;"><b>Frage / Antwort:</b> ' + escapeHtml(question) + '</div>';
-  html += '</div>';
-  chat.innerHTML += html;
+  const div = document.createElement('div');
+  div.className = 'message call';
+  div.innerHTML = `<div class="stepBadge">Aktives Mitglied</div>${smalltalk ? `<div><b>Einstieg:</b> ${escapeHtml(smalltalk)}</div>` : ''}${question ? `<div style="margin-top:6px;"><b>Frage / Reaktion:</b> ${escapeHtml(question)}</div>` : ''}`;
+  chat.appendChild(div);
+  scrollChatToBottom();
   document.getElementById('smalltalkInput').value='';
   document.getElementById('callerQuestionInput').value='';
   setActive('leadPanel');
@@ -319,42 +371,74 @@ function sendCallerTurn(){
 
 function processLeadInput(){
   const raw = document.getElementById('leadInput').value.trim();
-  const input = raw.toLowerCase();
-  if(!input) return;
+  if(!raw) return;
   appendLeadToChat(raw);
-  const found = rules.find(r => r.keys.some(k => input.includes(k)));
-  lastDetected = found ? found.label : 'Offene Einordnungsfrage';
-  lastResponse = found ? found.answer : 'Damit ich dich passend einordnen kann: Was ist aktuell deine konkrete unternehmerische Situation, die du in diesem Zusammenhang als erstes betrachten möchtest?';
-  document.getElementById('detectedLabel').innerText = lastDetected;
-  document.getElementById('response').innerText = lastResponse;
+  currentScenarioKey = detectScenario(raw);
+  document.getElementById('scenarioSelect').value = currentScenarioKey;
+  const data = flowLibrary[currentScenarioKey];
+  document.getElementById('detectedLabel').innerText = data.detected;
+  document.getElementById('response').innerText = data.recommended;
+  lastRecommendedResponse = data.recommended;
+  updateLeftForCurrentState();
+  updateRightForCurrentState();
+  document.getElementById('leadInput').value='';
   setActive('callerPanel');
+}
+
+function detectScenario(text){
+  const t = normalize(text);
+  const hit = transitionMap.find(rule => rule.keys.some(k => t.includes(normalize(k))));
+  return hit ? hit.scenario : 'naechster_schritt';
+}
+
+function updateLeftForCurrentState(){
+  const data = flowLibrary[currentScenarioKey];
+  renderOptions('leftQuestions', data.leftQuestions, 'useLeftQuestion');
+  renderOptions('leftResponses', data.leftResponses, 'useLeftResponse');
+  document.getElementById('callerQuestionInput').value = data.leftQuestions[0] || '';
+}
+
+function updateRightForCurrentState(){
+  const data = flowLibrary[currentScenarioKey];
+  renderOptions('rightAnswers', data.rightAnswers, 'useRightAnswer');
+  renderOptions('rightQuestions', data.rightQuestions, 'useRightQuestion');
 }
 
 function appendLeadToChat(text){
   const chat = document.getElementById('chat');
   const div = document.createElement('div');
   div.className = 'message lead';
-  div.innerHTML = '<b>Neues Mitglied</b><br><div><b>Antwort / Frage:</b> ' + escapeHtml(text) + '</div>';
+  div.innerHTML = `<div class="stepBadge">Neues Mitglied</div><div><b>Antwort / Frage:</b> ${escapeHtml(text)}</div>`;
   chat.appendChild(div);
+  scrollChatToBottom();
 }
 
-function useResponse(){
-  if(!lastResponse) return;
-  document.getElementById('callerQuestionInput').value = lastResponse;
+function useRecommendedResponse(){
+  if(!lastRecommendedResponse) return;
+  document.getElementById('callerQuestionInput').value = lastRecommendedResponse;
   setActive('callerPanel');
+}
+
+function scrollChatToBottom(){
+  const scroller = document.getElementById('chatScroll');
+  scroller.scrollTop = scroller.scrollHeight;
 }
 
 function resetChat(){
   document.getElementById('chat').innerHTML='';
-  document.getElementById('smalltalkInput').value='';
-  document.getElementById('callerQuestionInput').value='';
-  document.getElementById('leadInput').value='';
-  document.getElementById('response').innerText='';
   document.getElementById('detectedLabel').innerText='Noch keine Auswertung.';
-  lastResponse='';
-  lastDetected='';
-  applyScenario();
-  setActive('callerPanel');
+  document.getElementById('response').innerText='';
+  lastRecommendedResponse='';
+  startScenario();
+}
+
+function normalize(str){
+  return String(str || '')
+    .toLowerCase()
+    .replace(/[ä]/g,'ae')
+    .replace(/[ö]/g,'oe')
+    .replace(/[ü]/g,'ue')
+    .replace(/[ß]/g,'ss');
 }
 
 function escapeHtml(str){
@@ -367,7 +451,7 @@ function escapeHtml(str){
 }
 
 renderScenarioSelect();
-applyScenario();
+startScenario();
 </script>
 </body>
 </html>
