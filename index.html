@@ -122,7 +122,15 @@ button.ghost{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
     <div class="block">
       <div class="small">Empfohlene nächste Reaktion des aktiven Mitglieds</div>
       <div id="response" class="answerBox" style="margin-top:8px"></div>
-      <button onclick="useRecommendedResponse()">Empfohlene Reaktion links übernehmen</button>
+      <div class="row">
+        <button onclick="useRecommendedResponse()">Empfohlene Reaktion links übernehmen</button>
+        <button class="ghost" onclick="saveCurrentEntry()">Antwort zentral speichern</button>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="small">Speicherstatus</div>
+      <div id="saveStatus" style="margin-top:8px;font-weight:700">Noch nichts gespeichert.</div>
     </div>
   </div>
 
@@ -357,6 +365,7 @@ const transitionMap = [
 
 let currentScenarioKey = 'video_offen';
 let lastRecommendedResponse = '';
+const APPS_SCRIPT_URL = 'HIER_DEINE_APPS_SCRIPT_WEBAPP_URL_EINFUEGEN';
 
 function setActive(id){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -480,6 +489,52 @@ function detectScenario(text){
 function scrollChatToBottom(){
   const scroller = document.getElementById('chatScroll');
   scroller.scrollTop = scroller.scrollHeight;
+}
+
+async function saveCurrentEntry(){
+  const leadText = document.getElementById('leadInput').value.trim();
+  const recommended = document.getElementById('response').innerText.trim();
+  const detected = document.getElementById('detectedLabel').innerText.trim();
+  const scenario = flowLibrary[currentScenarioKey]?.detected || currentScenarioKey;
+
+  if(!leadText && !recommended){
+    document.getElementById('saveStatus').innerText = 'Bitte zuerst eine Antwort oder empfohlene Reaktion erzeugen.';
+    return;
+  }
+
+  if(APPS_SCRIPT_URL === 'HIER_DEINE_APPS_SCRIPT_WEBAPP_URL_EINFUEGEN'){
+    document.getElementById('saveStatus').innerText = 'Apps-Script-URL fehlt noch.';
+    return;
+  }
+
+  const payload = {
+    timestamp: new Date().toISOString(),
+    scenario,
+    detected,
+    leadText,
+    recommended,
+    currentQuestion: document.getElementById('callerQuestionInput').value.trim(),
+    chatHtml: document.getElementById('chat').innerText.trim()
+  };
+
+  document.getElementById('saveStatus').innerText = 'Speichere zentral...';
+
+  try{
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if(result && result.ok){
+      document.getElementById('saveStatus').innerText = 'Antwort zentral gespeichert.';
+    } else {
+      document.getElementById('saveStatus').innerText = 'Speichern fehlgeschlagen.';
+    }
+  } catch (error) {
+    document.getElementById('saveStatus').innerText = 'Fehler beim Speichern.';
+  }
 }
 
 function resetChat(){
