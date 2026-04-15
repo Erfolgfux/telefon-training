@@ -39,9 +39,9 @@ button.ghost{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
 .listButtons{display:grid;gap:8px;margin-top:10px}
 .optionBtn{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer;font-weight:600;line-height:1.45}
 .optionBtn:hover{border-color:var(--primary);background:#f8fcfd}
-.sectionTitle{margin-top:14px;font-size:14px;font-weight:700}
 .chatScroll{max-height:calc(100vh - 160px);overflow:auto;padding-right:4px}
 .stepBadge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eff6ff;color:#0f172a;font-size:12px;font-weight:700;margin-bottom:8px}
+.modeBadge{display:inline-block;padding:4px 8px;border-radius:999px;background:#f0fdf4;color:#166534;font-size:12px;font-weight:700;margin-left:8px}
 @media (max-width:1100px){.container{grid-template-columns:1fr;height:auto}.panel{height:auto}.chatScroll{max-height:none}}
 </style>
 </head>
@@ -50,7 +50,7 @@ button.ghost{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
 
   <div class="panel active" id="callerPanel">
     <h2>Aktives Mitglied</h2>
-    <div class="sub">Links führst du den Anruf. Nach jeder Antwort des neuen Mitglieds werden hier passend 5 neue Fragen und 5 neue Reaktionen angeboten.</div>
+    <div class="sub">Wenn links eine Frage oder Reaktion gesendet wird, erhält die rechte Seite dazu 5 passende Antworten und 5 passende Rückfragen. Wenn rechts geantwortet wird, wird links wiederum neu aufgebaut.</div>
 
     <label for="scenarioSelect">Ausgangssituation</label>
     <select id="scenarioSelect" onchange="startScenario()"></select>
@@ -66,47 +66,51 @@ button.ghost{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
       <button class="ghost" onclick="useLeftQuestion(0)">Vorgegebene Frage nutzen</button>
     </div>
 
-    <div class="twoCols">
-      <div class="block">
-        <div class="small">5 passende Fragen für das aktive Mitglied</div>
-        <div id="leftQuestions" class="listButtons"></div>
-      </div>
-      <div class="block">
-        <div class="small">5 passende Reaktionen des aktiven Mitglieds</div>
-        <div id="leftResponses" class="listButtons"></div>
+    <div class="block">
+      <div class="small">Aktueller Modus links <span id="leftMode" class="modeBadge">Fragen & Reaktionen</span></div>
+      <div class="twoCols">
+        <div>
+          <div class="small">5 passende Fragen für das aktive Mitglied</div>
+          <div id="leftQuestions" class="listButtons"></div>
+        </div>
+        <div>
+          <div class="small">5 passende Reaktionen des aktiven Mitglieds</div>
+          <div id="leftResponses" class="listButtons"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="panel" id="chatPanel">
     <h2>Gesprächsverlauf</h2>
-    <div class="sub">Der Verlauf wächst nach unten und kann gescrollt werden. Die Seiten links und rechts bleiben dabei statisch.</div>
-    <div id="chatScroll" class="chatScroll">
-      <div id="chat"></div>
-    </div>
+    <div class="sub">Der Verlauf wächst nach unten und kann gescrollt werden. Links und rechts bleiben statisch.</div>
+    <div id="chatScroll" class="chatScroll"><div id="chat"></div></div>
     <button class="secondary" onclick="resetChat()">Verlauf zurücksetzen</button>
   </div>
 
   <div class="panel" id="leadPanel">
     <h2>Neues Mitglied</h2>
-    <div class="sub">Rechts gibst du ein, was das neue Mitglied antwortet oder zurückfragt. Danach werden passend zum Gesprächsstand 5 neue Antworten und 5 neue Rückfragen angeboten.</div>
+    <div class="sub">Wenn rechts eine Antwort oder Rückfrage gesendet wird, erhält die linke Seite dazu 5 neue mögliche Fragen und 5 neue mögliche Reaktionen.</div>
 
     <label for="leadInput">Aktuelle Antwort / Frage des neuen Mitglieds</label>
     <textarea id="leadInput"></textarea>
 
     <div class="row">
-      <button onclick="processLeadInput()">Auswerten</button>
+      <button onclick="processLeadInput()">In Verlauf übernehmen</button>
       <button class="ghost" onclick="useRightAnswer(0)">Vorgegebene Antwort nutzen</button>
     </div>
 
-    <div class="twoCols">
-      <div class="block">
-        <div class="small">5 mögliche Antworten des neuen Mitglieds</div>
-        <div id="rightAnswers" class="listButtons"></div>
-      </div>
-      <div class="block">
-        <div class="small">5 mögliche Rückfragen des neuen Mitglieds</div>
-        <div id="rightQuestions" class="listButtons"></div>
+    <div class="block">
+      <div class="small">Aktueller Modus rechts <span id="rightMode" class="modeBadge">Antworten & Rückfragen</span></div>
+      <div class="twoCols">
+        <div>
+          <div class="small">5 mögliche Antworten des neuen Mitglieds</div>
+          <div id="rightAnswers" class="listButtons"></div>
+        </div>
+        <div>
+          <div class="small">5 mögliche Rückfragen des neuen Mitglieds</div>
+          <div id="rightQuestions" class="listButtons"></div>
+        </div>
       </div>
     </div>
 
@@ -135,6 +139,7 @@ const openings = {
 
 const flowLibrary = {
   video_offen: {
+    detected: 'Video noch nicht gesehen',
     leftQuestions: [
       'Konntest du dir die bereitgestellten Inhalte bereits in Ruhe ansehen?',
       'Hattest du schon Gelegenheit, in die Unternehmer-Info hineinzuschauen?',
@@ -163,10 +168,10 @@ const flowLibrary = {
       'Soll ich zuerst mit dem Video oder dem Backoffice anfangen?',
       'Was ist wichtig, wenn ich es angesehen habe?'
     ],
-    detected: 'Video noch nicht gesehen',
     recommended: 'Kein Problem. Dann ist das aktuell der beste nächste Schritt. Schau dir die Info in Ruhe an. Wenn du magst, kannst du dir dabei direkt notieren, welche Frage oder welche Situation du danach als Erstes einordnen möchtest.'
   },
   nutzen_unsicher: {
+    detected: 'Nutzenfrage / Unsicherheit',
     leftQuestions: [
       'Gab es etwas, das für dich besonders interessant oder noch unklar war?',
       'Wie ist dein erster Eindruck zu den bisherigen Inhalten?',
@@ -195,10 +200,10 @@ const flowLibrary = {
       'Geht es eher um meine aktuelle oder geplante Situation?',
       'Muss ich dafür schon genau wissen, was ich machen will?'
     ],
-    detected: 'Nutzenfrage / Unsicherheit',
     recommended: 'Das hängt immer von deiner individuellen Situation ab. Genau deshalb ist jetzt der wichtigste Schritt, zuerst den Bereich einzuordnen, der für dich aktuell überhaupt relevant ist. Welche Situation möchtest du als Erstes betrachten?'
   },
   naechster_schritt: {
+    detected: 'Nächster Schritt',
     leftQuestions: [
       'Was ist für dich aktuell die naheliegendste nächste Frage?',
       'Wo würdest du sagen, brauchst du gerade am meisten Orientierung?',
@@ -227,10 +232,10 @@ const flowLibrary = {
       'Kann ich mir erst einen Überblick verschaffen?',
       'Wie finde ich meinen ersten Bezugspunkt?'
     ],
-    detected: 'Nächster Schritt',
     recommended: 'Der sinnvollste erste Schritt ist meistens, einen konkreten Bereich auszuwählen und diesen im Zusammenhang zu verstehen. Was passt bei dir gerade am ehesten: bestehende Tätigkeit, neue Idee, Kontakte oder ein konkretes Angebot?'
   },
   sonderumlage: {
+    detected: 'Sonderumlage 20 Euro',
     leftQuestions: [
       'Gab es einen Punkt, zu dem du noch Rückfragen hast?',
       'Ist dir bisher an irgendeiner Stelle noch etwas unklar geblieben?',
@@ -259,10 +264,10 @@ const flowLibrary = {
       'Was passiert nach dieser Zuordnung?',
       'Welche Rolle spielt das für meine weitere Einordnung?'
     ],
-    detected: 'Sonderumlage 20 Euro',
     recommended: 'Die einmalige Sonderumlage dient der administrativen und organisatorischen Zuordnung innerhalb der Gemeinschaft. Unabhängig davon ist jetzt vor allem wichtig, deine aktuelle Situation sauber einzuordnen. Wo möchtest du da zuerst ansetzen?'
   },
   backoffice: {
+    detected: 'Backoffice / Orientierung',
     leftQuestions: [
       'Findest du dich im Backoffice bisher gut zurecht?',
       'Gab es dort einen Bereich, der für dich schon greifbar war?',
@@ -291,15 +296,61 @@ const flowLibrary = {
       'Soll ich nach meiner aktuellen oder geplanten Situation gehen?',
       'Wie finde ich den passenden ersten Bezugspunkt?'
     ],
-    detected: 'Backoffice / Orientierung',
     recommended: 'Das Backoffice dient vor allem der strukturierten Orientierung. Der einfachste Einstieg ist, mit dem Bereich zu beginnen, der deiner aktuellen oder geplanten Situation am nächsten kommt. Welcher Bereich wäre das bei dir?'
+  }
+};
+
+const responseDrivenOptions = {
+  caller: {
+    video_offen: {
+      questions: flowLibrary.video_offen.leftQuestions,
+      responses: flowLibrary.video_offen.leftResponses,
+    },
+    nutzen_unsicher: {
+      questions: flowLibrary.nutzen_unsicher.leftQuestions,
+      responses: flowLibrary.nutzen_unsicher.leftResponses,
+    },
+    naechster_schritt: {
+      questions: flowLibrary.naechster_schritt.leftQuestions,
+      responses: flowLibrary.naechster_schritt.leftResponses,
+    },
+    sonderumlage: {
+      questions: flowLibrary.sonderumlage.leftQuestions,
+      responses: flowLibrary.sonderumlage.leftResponses,
+    },
+    backoffice: {
+      questions: flowLibrary.backoffice.leftQuestions,
+      responses: flowLibrary.backoffice.leftResponses,
+    }
+  },
+  lead: {
+    video_offen: {
+      answers: flowLibrary.video_offen.rightAnswers,
+      questions: flowLibrary.video_offen.rightQuestions,
+    },
+    nutzen_unsicher: {
+      answers: flowLibrary.nutzen_unsicher.rightAnswers,
+      questions: flowLibrary.nutzen_unsicher.rightQuestions,
+    },
+    naechster_schritt: {
+      answers: flowLibrary.naechster_schritt.rightAnswers,
+      questions: flowLibrary.naechster_schritt.rightQuestions,
+    },
+    sonderumlage: {
+      answers: flowLibrary.sonderumlage.rightAnswers,
+      questions: flowLibrary.sonderumlage.rightQuestions,
+    },
+    backoffice: {
+      answers: flowLibrary.backoffice.rightAnswers,
+      questions: flowLibrary.backoffice.rightQuestions,
+    }
   }
 };
 
 const transitionMap = [
   { keys:['noch nicht angesehen','noch nicht geschaut','noch nicht dazu gekommen','keine zeit','eingebunden'], scenario:'video_offen' },
-  { keys:['was bringt','nutzen','unsicher','passt','nicht klar'], scenario:'nutzen_unsicher' },
-  { keys:['wie geht es weiter','nächste schritt','was soll ich jetzt machen','starten','wo anfangen'], scenario:'naechster_schritt' },
+  { keys:['was bringt','nutzen','unsicher','passt','nicht klar','verstehe'], scenario:'nutzen_unsicher' },
+  { keys:['wie geht es weiter','nächste schritt','naechste schritt','was soll ich jetzt machen','starten','wo anfangen'], scenario:'naechster_schritt' },
   { keys:['20','sonderumlage'], scenario:'sonderumlage' },
   { keys:['backoffice','wo finde ich','zurecht','unübersichtlich','unuebersichtlich'], scenario:'backoffice' }
 ];
@@ -319,22 +370,30 @@ function renderScenarioSelect(){
 
 function startScenario(){
   currentScenarioKey = document.getElementById('scenarioSelect').value;
-  hydratePanels(currentScenarioKey);
+  const data = flowLibrary[currentScenarioKey];
+  document.getElementById('smalltalkInput').value = openings[currentScenarioKey] || '';
+  document.getElementById('callerQuestionInput').value = data.leftQuestions[0] || '';
+  document.getElementById('leadInput').value = '';
+  hydrateLeft(currentScenarioKey);
+  hydrateRight(currentScenarioKey);
   document.getElementById('detectedLabel').innerText = 'Noch keine Auswertung.';
   document.getElementById('response').innerText = '';
   lastRecommendedResponse = '';
+  document.getElementById('leftMode').innerText = 'Fragen & Reaktionen';
+  document.getElementById('rightMode').innerText = 'Antworten & Rückfragen';
   setActive('callerPanel');
 }
 
-function hydratePanels(key){
-  const data = flowLibrary[key];
-  document.getElementById('smalltalkInput').value = openings[key] || '';
-  document.getElementById('callerQuestionInput').value = data.leftQuestions[0] || '';
-  document.getElementById('leadInput').value = data.rightAnswers[0] || '';
-  renderOptions('leftQuestions', data.leftQuestions, 'useLeftQuestion');
-  renderOptions('leftResponses', data.leftResponses, 'useLeftResponse');
-  renderOptions('rightAnswers', data.rightAnswers, 'useRightAnswer');
-  renderOptions('rightQuestions', data.rightQuestions, 'useRightQuestion');
+function hydrateLeft(key){
+  const data = responseDrivenOptions.caller[key];
+  renderOptions('leftQuestions', data.questions, 'useLeftQuestion');
+  renderOptions('leftResponses', data.responses, 'useLeftResponse');
+}
+
+function hydrateRight(key){
+  const data = responseDrivenOptions.lead[key];
+  renderOptions('rightAnswers', data.answers, 'useRightAnswer');
+  renderOptions('rightQuestions', data.questions, 'useRightQuestion');
 }
 
 function renderOptions(containerId, items, fnName){
@@ -342,28 +401,36 @@ function renderOptions(containerId, items, fnName){
 }
 
 function useLeftQuestion(index){
-  document.getElementById('callerQuestionInput').value = flowLibrary[currentScenarioKey].leftQuestions[index] || '';
+  document.getElementById('callerQuestionInput').value = responseDrivenOptions.caller[currentScenarioKey].questions[index] || '';
 }
 function useLeftResponse(index){
-  document.getElementById('callerQuestionInput').value = flowLibrary[currentScenarioKey].leftResponses[index] || '';
+  document.getElementById('callerQuestionInput').value = responseDrivenOptions.caller[currentScenarioKey].responses[index] || '';
 }
 function useRightAnswer(index){
-  document.getElementById('leadInput').value = flowLibrary[currentScenarioKey].rightAnswers[index] || '';
+  document.getElementById('leadInput').value = responseDrivenOptions.lead[currentScenarioKey].answers[index] || '';
 }
 function useRightQuestion(index){
-  document.getElementById('leadInput').value = flowLibrary[currentScenarioKey].rightQuestions[index] || '';
+  document.getElementById('leadInput').value = responseDrivenOptions.lead[currentScenarioKey].questions[index] || '';
 }
 
 function sendCallerTurn(){
   const smalltalk = document.getElementById('smalltalkInput').value.trim();
-  const question = document.getElementById('callerQuestionInput').value.trim();
-  if(!smalltalk && !question) return;
+  const text = document.getElementById('callerQuestionInput').value.trim();
+  if(!smalltalk && !text) return;
+
   const chat = document.getElementById('chat');
   const div = document.createElement('div');
   div.className = 'message call';
-  div.innerHTML = `<div class="stepBadge">Aktives Mitglied</div>${smalltalk ? `<div><b>Einstieg:</b> ${escapeHtml(smalltalk)}</div>` : ''}${question ? `<div style="margin-top:6px;"><b>Frage / Reaktion:</b> ${escapeHtml(question)}</div>` : ''}`;
+  div.innerHTML = `<div class="stepBadge">Aktives Mitglied</div>${smalltalk ? `<div><b>Einstieg:</b> ${escapeHtml(smalltalk)}</div>` : ''}${text ? `<div style="margin-top:6px;"><b>Frage / Reaktion:</b> ${escapeHtml(text)}</div>` : ''}`;
   chat.appendChild(div);
   scrollChatToBottom();
+
+  const nextForLead = detectScenario(text);
+  currentScenarioKey = nextForLead;
+  document.getElementById('scenarioSelect').value = currentScenarioKey;
+  hydrateRight(currentScenarioKey);
+  document.getElementById('leadInput').value = responseDrivenOptions.lead[currentScenarioKey].answers[0] || '';
+  document.getElementById('rightMode').innerText = 'Antworten & Rückfragen – passend zur linken Frage';
   document.getElementById('smalltalkInput').value='';
   document.getElementById('callerQuestionInput').value='';
   setActive('leadPanel');
@@ -372,6 +439,7 @@ function sendCallerTurn(){
 function processLeadInput(){
   const raw = document.getElementById('leadInput').value.trim();
   if(!raw) return;
+
   appendLeadToChat(raw);
   currentScenarioKey = detectScenario(raw);
   document.getElementById('scenarioSelect').value = currentScenarioKey;
@@ -379,36 +447,20 @@ function processLeadInput(){
   document.getElementById('detectedLabel').innerText = data.detected;
   document.getElementById('response').innerText = data.recommended;
   lastRecommendedResponse = data.recommended;
-  updateLeftForCurrentState();
-  updateRightForCurrentState();
+  hydrateLeft(currentScenarioKey);
+  hydrateRight(currentScenarioKey);
+  document.getElementById('callerQuestionInput').value = responseDrivenOptions.caller[currentScenarioKey].questions[0] || '';
+  document.getElementById('leftMode').innerText = 'Fragen & Reaktionen – passend zur rechten Antwort';
+  document.getElementById('rightMode').innerText = 'Antworten & Rückfragen';
   document.getElementById('leadInput').value='';
   setActive('callerPanel');
-}
-
-function detectScenario(text){
-  const t = normalize(text);
-  const hit = transitionMap.find(rule => rule.keys.some(k => t.includes(normalize(k))));
-  return hit ? hit.scenario : 'naechster_schritt';
-}
-
-function updateLeftForCurrentState(){
-  const data = flowLibrary[currentScenarioKey];
-  renderOptions('leftQuestions', data.leftQuestions, 'useLeftQuestion');
-  renderOptions('leftResponses', data.leftResponses, 'useLeftResponse');
-  document.getElementById('callerQuestionInput').value = data.leftQuestions[0] || '';
-}
-
-function updateRightForCurrentState(){
-  const data = flowLibrary[currentScenarioKey];
-  renderOptions('rightAnswers', data.rightAnswers, 'useRightAnswer');
-  renderOptions('rightQuestions', data.rightQuestions, 'useRightQuestion');
 }
 
 function appendLeadToChat(text){
   const chat = document.getElementById('chat');
   const div = document.createElement('div');
   div.className = 'message lead';
-  div.innerHTML = `<div class="stepBadge">Neues Mitglied</div><div><b>Antwort / Frage:</b> ${escapeHtml(text)}</div>`;
+  div.innerHTML = `<div class="stepBadge">Neues Mitglied</div><div><b>Antwort / Rückfrage:</b> ${escapeHtml(text)}</div>`;
   chat.appendChild(div);
   scrollChatToBottom();
 }
@@ -417,6 +469,12 @@ function useRecommendedResponse(){
   if(!lastRecommendedResponse) return;
   document.getElementById('callerQuestionInput').value = lastRecommendedResponse;
   setActive('callerPanel');
+}
+
+function detectScenario(text){
+  const t = normalize(text);
+  const hit = transitionMap.find(rule => rule.keys.some(k => t.includes(normalize(k))));
+  return hit ? hit.scenario : 'naechster_schritt';
 }
 
 function scrollChatToBottom(){
